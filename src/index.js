@@ -180,6 +180,27 @@ async function Run() {
         }
     });
 
+
 }
 
-Run();
+var clickEvent = ('ontouchstart' in document.documentElement) ? 'touchend' : 'click';
+
+const el = document.getElementById("launch")
+el.addEventListener(clickEvent, () => {
+    console.log('Launched')
+    el.parentElement.removeChild(el);
+
+    const PLAYER = new Tone.Player({
+        "url": "concerto-for-guitar.m4a",
+        "loop": true,
+        "volume": 5,
+        "onload": () => {
+            console.log('Loaded audio')
+            Tone.start();
+            PLAYER.sync().connect(FILTER).start();
+            FILTER.toDestination()
+        }
+    })
+
+    Run();
+})
