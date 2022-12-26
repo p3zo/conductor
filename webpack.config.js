@@ -6,11 +6,18 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 const PRODUCTION = !!process.env.PRODUCTION;
 
-const DEMOS = ['tfjs_webgl', 'tfjs_wasm'];
-
 module.exports = (env) => {
     const config = {
         mode: PRODUCTION ? 'production' : 'development',
+        entry: {
+            main: './src/index.js',
+        },
+        output: {
+            path: path.resolve(__dirname, 'dist'),
+            clean: true,
+            filename: 'bundle.js',
+            publicPath: '/',
+        },
         devtool: 'inline-source-map',
         devServer: {
             headers: {
@@ -26,31 +33,8 @@ module.exports = (env) => {
             },
             watchFiles: ['src/**/*'],
         },
-        output: {
-            path: path.resolve(__dirname, 'dist'),
-            clean: true,
-        },
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
-        },
-        plugins: [
-            ...DEMOS.map((d) => new HtmlWebpackPlugin({
-                template: 'index.html',
-                filename: 'index.html',
-            })),
-            new CopyWebpackPlugin({
-                patterns: [
-                    {from: 'node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm'},
-                    {from: 'node_modules/@handtracking.io/yoha/models/', to: './'},
-                    {from: 'dist', to: './'},
-                ]
-            })
-        ],
-        optimization: {
-            minimizer: [new TerserPlugin({
-                extractComments: false,
-                exclude: /\.min\./,
-            })],
         },
         module: {
             rules: [
@@ -70,12 +54,25 @@ module.exports = (env) => {
                 },
             ],
         },
-        entry: {
-            example: {
-                import: './src/main.js',
-                filename: 'main.js',
-            },
-        }
+        plugins: [
+            new HtmlWebpackPlugin({
+                template: 'index.html',
+                filename: 'index.html',
+            }),
+            new CopyWebpackPlugin({
+                patterns: [
+                    {from: 'node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm'},
+                    {from: 'node_modules/@handtracking.io/yoha/models/', to: './'},
+                    {from: 'static', to: './'},
+                ]
+            })
+        ],
+        optimization: {
+            minimizer: [new TerserPlugin({
+                extractComments: false,
+                exclude: /\.min\./,
+            })],
+        },
     };
 
     return [config];

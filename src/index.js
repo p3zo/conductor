@@ -88,8 +88,8 @@ function CreateLayerStack(video, width, height) {
 async function Run() {
     // Download hand tracking models
     const modelFiles = await yoha.DownloadMultipleYohaTfjsModelBlobs(
-        '/box/model.json',
-        '/lan/model.json',
+        'box/model.json',
+        'lan/model.json',
         (rec, total) => {
             if (rec / total == 1) {
                 console.log('Loaded hand tracking model')
