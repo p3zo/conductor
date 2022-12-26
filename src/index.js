@@ -5,6 +5,7 @@ import * as yoha from '@handtracking.io/yoha';
 
 import {
     VideoLayer,
+    DynamicPathLayer,
     PointLayer,
     LayerStack,
     LandmarkLayer,
@@ -16,17 +17,47 @@ import {ExponentialCoordinateAverage, ComputeCursorPositionFromCoordinates} from
 const BORDER_PADDING_FACTOR = 0.05;
 const VIDEO_WIDTH_FACTOR = 0.66;
 
+const FILTER = new Tone.Filter(0, "highpass")
 
-var player = new Tone.Player({
-    "url": "concerto-for-guitar.m4a",
-    "loop": true,
-    "volume": 5,
-    "onload": () => {
-        console.log('Loaded audio')
-        Tone.start();
-        player.sync().start();
+const HOTSPOT_HEIGHT = .33
+const HOTSPOT_WIDTH = .25
+
+function mapRange(number, inMin, inMax, outMin, outMax) {
+    return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}
+
+const controlFilter = (x, y) => {
+    if (y < 0) {
+        y = 0
     }
-}).toDestination();
+    if (x < 0) {
+        x = 0
+    }
+
+    // top-left
+    if (x < HOTSPOT_WIDTH && y < HOTSPOT_HEIGHT) {
+        var freq = mapRange(x * y, 0, HOTSPOT_WIDTH * HOTSPOT_HEIGHT, 0, 2000)
+        if (freq < 0) {
+            freq = 0
+        }
+        FILTER.set({frequency: freq, type: 'lowpass'})
+        document.getElementById('lowpass').textContent = freq.toFixed(2);
+    } else {
+        document.getElementById('lowpass').textContent = 'off'
+    }
+
+    // bottom-right
+    if (x > 1 - HOTSPOT_WIDTH && y > 1 - HOTSPOT_HEIGHT) {
+        var freq = mapRange(x * y, (1 - HOTSPOT_WIDTH) * (1 - HOTSPOT_HEIGHT), 1, 0, 2000)
+        if (freq < 0) {
+            freq = 0
+        }
+        FILTER.set({frequency: freq, type: 'highpass'})
+        document.getElementById('highpass').textContent = freq.toFixed(2);
+    } else {
+        document.getElementById('highpass').textContent = 'off'
+    }
+}
 
 const pauseTransport = function () {
     if (Tone.Transport.state == 'started') {
@@ -82,7 +113,34 @@ function CreateLayerStack(video, width, height) {
     });
     stack.AddLayer(fpsLayer);
 
-    return {stack, videoLayer, pointLayer, landmarkLayer, fpsLayer};
+    const axisLayer = new DynamicPathLayer({
+        pathLayerConfig: {
+            width,
+            height,
+            numSmoothPoints: 2,
+            color: 'white',
+            lineWidth: .25,
+        }
+    });
+    axisLayer.AddNode(HOTSPOT_WIDTH, 0);
+    axisLayer.AddNode(HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
+    axisLayer.EndPath();
+
+    axisLayer.AddNode(0, HOTSPOT_HEIGHT);
+    axisLayer.AddNode(HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
+    axisLayer.EndPath();
+
+    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
+    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 1);
+    axisLayer.EndPath();
+
+    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
+    axisLayer.AddNode(1, 1 - HOTSPOT_HEIGHT);
+    axisLayer.EndPath();
+
+    stack.AddLayer(axisLayer);
+
+    return {stack, videoLayer, pointLayer, axisLayer, landmarkLayer, fpsLayer};
 }
 
 async function Run() {
@@ -127,7 +185,7 @@ async function Run() {
     ({width, height} = ScaleResolutionToWidth({width, height}, targetWidth));
 
     // Create visualization layers
-    const {stack, pointLayer, landmarkLayer, fpsLayer} =
+    const {stack, pointLayer, axisLayer, landmarkLayer, fpsLayer} =
         CreateLayerStack(src, width, height);
     document.getElementById('canvas').appendChild(stack.GetEl());
 
@@ -150,12 +208,16 @@ async function Run() {
     yoha.StartTfjsWasmEngine(config, wasmConfig, src, modelFiles, res => {
         fpsLayer.RegisterCall();
 
+        axisLayer.Render();
+
         document.getElementById('transport').textContent = Tone.Transport.seconds.toFixed(2);
 
         if (res.isHandPresentProb > thresholds.IS_HAND_PRESENT) {
-            const cursorPos = pos.Add(ComputeCursorPositionFromCoordinates(res.coordinates));
+            const [cursorX, cursorY] = pos.Add(ComputeCursorPositionFromCoordinates(res.coordinates));
 
-            pointLayer.DrawPoint(cursorPos[0], cursorPos[1]);
+            controlFilter(cursorX, cursorY)
+
+            pointLayer.DrawPoint(cursorX, cursorY);
             pointLayer.Render();
 
             if (res.poses.pinchProb > thresholds.PINCH) {
