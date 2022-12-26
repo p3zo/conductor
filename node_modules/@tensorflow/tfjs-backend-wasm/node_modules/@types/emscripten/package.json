@@ -1,0 +1,29 @@
+{
+    "name": "@types/emscripten",
+    "version": "0.0.34",
+    "description": "TypeScript definitions for Emscripten",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Kensuke Matsuzaki",
+            "url": "https://github.com/zakki",
+            "githubUsername": "zakki"
+        },
+        {
+            "name": "Periklis Tsirakidis",
+            "url": "https://github.com/periklis",
+            "githubUsername": "periklis"
+        }
+    ],
+    "main": "",
+    "types": "index",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/emscripten"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "0b7ade53f750b97897f198f25b2246d7a4f6cec1890fad68b7983a0e21cb54cf",
+    "typeScriptVersion": "2.2"
+}

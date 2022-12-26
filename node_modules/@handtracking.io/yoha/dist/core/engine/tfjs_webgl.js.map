@@ -1,0 +1,1 @@
+{"version":3,"file":"tfjs_webgl.js","sourceRoot":"","sources":["../../../src/core/engine/tfjs_webgl.ts"],"names":[],"mappings":"AAaA,OAAO,EAAC,eAAe,EAAC,MAAM,aAAa,CAAC;AAE5C;;;;;;;;;;;;GAYG;AACH,MAAM,CAAC,KAAK,UAAU,oBAAoB,CACxC,YAA2B,EAC3B,WAAyB,EACzB,UAA+B,EAC/B,KAAqB;IAErB,OAAO,eAAe,CACpB,YAAY,EACZ,EAAC,WAAW,qBAAuB,EAAC,EACpC,UAAU,EACV,WAAW,EACX,KAAK,CACN,CAAC;AACJ,CAAC"}

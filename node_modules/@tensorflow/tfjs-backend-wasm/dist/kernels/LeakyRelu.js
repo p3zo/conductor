@@ -1,0 +1,46 @@
+/**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =============================================================================
+ */
+import { LeakyRelu, util } from '@tensorflow/tfjs-core';
+import { CppDType } from './types';
+let wasmFunc;
+function setupFunc(backend) {
+    wasmFunc = backend.wasm.cwrap(LeakyRelu, null /* void */, [
+        'number',
+        'number',
+        'number',
+        'number',
+    ]);
+}
+export function leakyRelu(args) {
+    const { inputs: { x }, attrs: { alpha }, backend } = args;
+    const xId = backend.dataIdMap.get(x.dataId).id;
+    // According to TF API, LeakyRelu returns float32 when input is either float32
+    // or int32.
+    const out = backend.makeOutput(x.shape, 'float32');
+    if (util.sizeFromShape(x.shape) !== 0) {
+        const outId = backend.dataIdMap.get(out.dataId).id;
+        wasmFunc(xId, CppDType[x.dtype], alpha, outId);
+    }
+    return out;
+}
+export const leakyReluConfig = {
+    kernelName: LeakyRelu,
+    backendName: 'wasm',
+    setupFunc,
+    kernelFunc: leakyRelu,
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiTGVha3lSZWx1LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vLi4vLi4vLi4vLi4vdGZqcy1iYWNrZW5kLXdhc20vc3JjL2tlcm5lbHMvTGVha3lSZWx1LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7R0FlRztBQUVILE9BQU8sRUFBMkIsU0FBUyxFQUErQyxJQUFJLEVBQUMsTUFBTSx1QkFBdUIsQ0FBQztBQUk3SCxPQUFPLEVBQUMsUUFBUSxFQUFDLE1BQU0sU0FBUyxDQUFDO0FBRWpDLElBQUksUUFDMEUsQ0FBQztBQUUvRSxTQUFTLFNBQVMsQ0FBQyxPQUFvQjtJQUNyQyxRQUFRLEdBQUcsT0FBTyxDQUFDLElBQUksQ0FBQyxLQUFLLENBQUMsU0FBUyxFQUFFLElBQUksQ0FBQyxVQUFVLEVBQUU7UUFDeEQsUUFBUTtRQUNSLFFBQVE7UUFDUixRQUFRO1FBQ1IsUUFBUTtLQUNULENBQUMsQ0FBQztBQUNMLENBQUM7QUFFRCxNQUFNLFVBQVUsU0FBUyxDQUNyQixJQUMwRTtJQUU1RSxNQUFNLEVBQUMsTUFBTSxFQUFFLEVBQUMsQ0FBQyxFQUFDLEVBQUUsS0FBSyxFQUFFLEVBQUMsS0FBSyxFQUFDLEVBQUUsT0FBTyxFQUFDLEdBQUcsSUFBSSxDQUFDO0lBRXBELE1BQU0sR0FBRyxHQUFHLE9BQU8sQ0FBQyxTQUFTLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxNQUFNLENBQUMsQ0FBQyxFQUFFLENBQUM7SUFDL0MsOEVBQThFO0lBQzlFLFlBQVk7SUFDWixNQUFNLEdBQUcsR0FBRyxPQUFPLENBQUMsVUFBVSxDQUFDLENBQUMsQ0FBQyxLQUFLLEVBQUUsU0FBUyxDQUFDLENBQUM7SUFFbkQsSUFBSSxJQUFJLENBQUMsYUFBYSxDQUFDLENBQUMsQ0FBQyxLQUFLLENBQUMsS0FBSyxDQUFDLEVBQUU7UUFDckMsTUFBTSxLQUFLLEdBQUcsT0FBTyxDQUFDLFNBQVMsQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxDQUFDLEVBQUUsQ0FBQztRQUNuRCxRQUFRLENBQUMsR0FBRyxFQUFFLFFBQVEsQ0FBQyxDQUFDLENBQUMsS0FBSyxDQUFDLEVBQUUsS0FBSyxFQUFFLEtBQUssQ0FBQyxDQUFDO0tBQ2hEO0lBRUQsT0FBTyxHQUFHLENBQUM7QUFDYixDQUFDO0FBRUQsTUFBTSxDQUFDLE1BQU0sZUFBZSxHQUFpQjtJQUMzQyxVQUFVLEVBQUUsU0FBUztJQUNyQixXQUFXLEVBQUUsTUFBTTtJQUNuQixTQUFTO0lBQ1QsVUFBVSxFQUFFLFNBQTZCO0NBQzFDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEBsaWNlbnNlXG4gKiBDb3B5cmlnaHQgMjAxOSBHb29nbGUgTExDLiBBbGwgUmlnaHRzIFJlc2VydmVkLlxuICogTGljZW5zZWQgdW5kZXIgdGhlIEFwYWNoZSBMaWNlbnNlLCBWZXJzaW9uIDIuMCAodGhlIFwiTGljZW5zZVwiKTtcbiAqIHlvdSBtYXkgbm90IHVzZSB0aGlzIGZpbGUgZXhjZXB0IGluIGNvbXBsaWFuY2Ugd2l0aCB0aGUgTGljZW5zZS5cbiAqIFlvdSBtYXkgb2J0YWluIGEgY29weSBvZiB0aGUgTGljZW5zZSBhdFxuICpcbiAqIGh0dHA6Ly93d3cuYXBhY2hlLm9yZy9saWNlbnNlcy9MSUNFTlNFLTIuMFxuICpcbiAqIFVubGVzcyByZXF1aXJlZCBieSBhcHBsaWNhYmxlIGxhdyBvciBhZ3JlZWQgdG8gaW4gd3JpdGluZywgc29mdHdhcmVcbiAqIGRpc3RyaWJ1dGVkIHVuZGVyIHRoZSBMaWNlbnNlIGlzIGRpc3RyaWJ1dGVkIG9uIGFuIFwiQVMgSVNcIiBCQVNJUyxcbiAqIFdJVEhPVVQgV0FSUkFOVElFUyBPUiBDT05ESVRJT05TIE9GIEFOWSBLSU5ELCBlaXRoZXIgZXhwcmVzcyBvciBpbXBsaWVkLlxuICogU2VlIHRoZSBMaWNlbnNlIGZvciB0aGUgc3BlY2lmaWMgbGFuZ3VhZ2UgZ292ZXJuaW5nIHBlcm1pc3Npb25zIGFuZFxuICogbGltaXRhdGlvbnMgdW5kZXIgdGhlIExpY2Vuc2UuXG4gKiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PVxuICovXG5cbmltcG9ydCB7S2VybmVsQ29uZmlnLCBLZXJuZWxGdW5jLCBMZWFreVJlbHUsIExlYWt5UmVsdUF0dHJzLCBMZWFreVJlbHVJbnB1dHMsIFRlbnNvckluZm8sIHV0aWx9IGZyb20gJ0B0ZW5zb3JmbG93L3RmanMtY29yZSc7XG5cbmltcG9ydCB7QmFja2VuZFdhc219IGZyb20gJy4uL2JhY2tlbmRfd2FzbSc7XG5cbmltcG9ydCB7Q3BwRFR5cGV9IGZyb20gJy4vdHlwZXMnO1xuXG5sZXQgd2FzbUZ1bmM6IChcbiAgICB4SWQ6IG51bWJlciwgZHR5cGU6IG51bWJlciwgbGVha3lyZWx1QWxwaGE6IG51bWJlciwgb3V0SWQ6IG51bWJlcikgPT4gdm9pZDtcblxuZnVuY3Rpb24gc2V0dXBGdW5jKGJhY2tlbmQ6IEJhY2tlbmRXYXNtKTogdm9pZCB7XG4gIHdhc21GdW5jID0gYmFja2VuZC53YXNtLmN3cmFwKExlYWt5UmVsdSwgbnVsbCAvKiB2b2lkICovLCBbXG4gICAgJ251bWJlcicsICAvLyB4X2lkXG4gICAgJ251bWJlcicsICAvLyBkdHlwZVxuICAgICdudW1iZXInLCAgLy8gbGVha3lyZWx1X2FscGhhXG4gICAgJ251bWJlcicsICAvLyBvdXRfaWRcbiAgXSk7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBsZWFreVJlbHUoXG4gICAgYXJnczpcbiAgICAgICAge2lucHV0czogTGVha3lSZWx1SW5wdXRzLCBhdHRyczogTGVha3lSZWx1QXR0cnMsIGJhY2tlbmQ6IEJhY2tlbmRXYXNtfSk6XG4gICAgVGVuc29ySW5mbyB7XG4gIGNvbnN0IHtpbnB1dHM6IHt4fSwgYXR0cnM6IHthbHBoYX0sIGJhY2tlbmR9ID0gYXJncztcblxuICBjb25zdCB4SWQgPSBiYWNrZW5kLmRhdGFJZE1hcC5nZXQoeC5kYXRhSWQpLmlkO1xuICAvLyBBY2NvcmRpbmcgdG8gVEYgQVBJLCBMZWFreVJlbHUgcmV0dXJucyBmbG9hdDMyIHdoZW4gaW5wdXQgaXMgZWl0aGVyIGZsb2F0MzJcbiAgLy8gb3IgaW50MzIuXG4gIGNvbnN0IG91dCA9IGJhY2tlbmQubWFrZU91dHB1dCh4LnNoYXBlLCAnZmxvYXQzMicpO1xuXG4gIGlmICh1dGlsLnNpemVGcm9tU2hhcGUoeC5zaGFwZSkgIT09IDApIHtcbiAgICBjb25zdCBvdXRJZCA9IGJhY2tlbmQuZGF0YUlkTWFwLmdldChvdXQuZGF0YUlkKS5pZDtcbiAgICB3YXNtRnVuYyh4SWQsIENwcERUeXBlW3guZHR5cGVdLCBhbHBoYSwgb3V0SWQpO1xuICB9XG5cbiAgcmV0dXJuIG91dDtcbn1cblxuZXhwb3J0IGNvbnN0IGxlYWt5UmVsdUNvbmZpZzogS2VybmVsQ29uZmlnID0ge1xuICBrZXJuZWxOYW1lOiBMZWFreVJlbHUsXG4gIGJhY2tlbmROYW1lOiAnd2FzbScsXG4gIHNldHVwRnVuYyxcbiAga2VybmVsRnVuYzogbGVha3lSZWx1IGFzIHt9IGFzIEtlcm5lbEZ1bmMsXG59O1xuIl19

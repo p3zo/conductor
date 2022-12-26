@@ -1,0 +1,45 @@
+/**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =============================================================================
+ */
+import { FlipLeftRight } from '@tensorflow/tfjs-core';
+let wasmFlipLeftRight;
+function setup(backend) {
+    wasmFlipLeftRight = backend.wasm.cwrap(FlipLeftRight, null /* void */, [
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+    ]);
+}
+export function flipLeftRight(args) {
+    const { inputs, backend } = args;
+    const { image } = inputs;
+    const out = backend.makeOutput(image.shape, image.dtype);
+    const imageId = backend.dataIdMap.get(image.dataId).id;
+    const outId = backend.dataIdMap.get(out.dataId).id;
+    const [batch, imageHeight, imageWidth, numChannels] = image.shape;
+    wasmFlipLeftRight(imageId, batch, imageHeight, imageWidth, numChannels, outId);
+    return out;
+}
+export const flipLeftRightConfig = {
+    kernelName: FlipLeftRight,
+    backendName: 'wasm',
+    kernelFunc: flipLeftRight,
+    setupFunc: setup
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiRmxpcExlZnRSaWdodC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uLy4uLy4uLy4uLy4uL3RmanMtYmFja2VuZC13YXNtL3NyYy9rZXJuZWxzL0ZsaXBMZWZ0UmlnaHQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Ozs7Ozs7Ozs7OztHQWVHO0FBRUgsT0FBTyxFQUFDLGFBQWEsRUFBNEQsTUFBTSx1QkFBdUIsQ0FBQztBQUkvRyxJQUFJLGlCQUUyQyxDQUFDO0FBRWhELFNBQVMsS0FBSyxDQUFDLE9BQW9CO0lBQ2pDLGlCQUFpQixHQUFHLE9BQU8sQ0FBQyxJQUFJLENBQUMsS0FBSyxDQUFDLGFBQWEsRUFBRSxJQUFJLENBQUMsVUFBVSxFQUFFO1FBQ3JFLFFBQVE7UUFDUixRQUFRO1FBQ1IsUUFBUTtRQUNSLFFBQVE7UUFDUixRQUFRO1FBQ1IsUUFBUTtLQUNULENBQUMsQ0FBQztBQUNMLENBQUM7QUFFRCxNQUFNLFVBQVUsYUFBYSxDQUN6QixJQUF5RDtJQUMzRCxNQUFNLEVBQUMsTUFBTSxFQUFFLE9BQU8sRUFBQyxHQUFHLElBQUksQ0FBQztJQUMvQixNQUFNLEVBQUMsS0FBSyxFQUFDLEdBQUcsTUFBTSxDQUFDO0lBRXZCLE1BQU0sR0FBRyxHQUFHLE9BQU8sQ0FBQyxVQUFVLENBQUMsS0FBSyxDQUFDLEtBQUssRUFBRSxLQUFLLENBQUMsS0FBSyxDQUFDLENBQUM7SUFDekQsTUFBTSxPQUFPLEdBQUcsT0FBTyxDQUFDLFNBQVMsQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLE1BQU0sQ0FBQyxDQUFDLEVBQUUsQ0FBQztJQUN2RCxNQUFNLEtBQUssR0FBRyxPQUFPLENBQUMsU0FBUyxDQUFDLEdBQUcsQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLENBQUMsRUFBRSxDQUFDO0lBRW5ELE1BQU0sQ0FBQyxLQUFLLEVBQUUsV0FBVyxFQUFFLFVBQVUsRUFBRSxXQUFXLENBQUMsR0FBRyxLQUFLLENBQUMsS0FBSyxDQUFDO0lBRWxFLGlCQUFpQixDQUNiLE9BQU8sRUFBRSxLQUFLLEVBQUUsV0FBVyxFQUFFLFVBQVUsRUFBRSxXQUFXLEVBQUUsS0FBSyxDQUFDLENBQUM7SUFDakUsT0FBTyxHQUFHLENBQUM7QUFDYixDQUFDO0FBRUQsTUFBTSxDQUFDLE1BQU0sbUJBQW1CLEdBQWlCO0lBQy9DLFVBQVUsRUFBRSxhQUFhO0lBQ3pCLFdBQVcsRUFBRSxNQUFNO0lBQ25CLFVBQVUsRUFBRSxhQUFpQztJQUM3QyxTQUFTLEVBQUUsS0FBSztDQUNqQixDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiBAbGljZW5zZVxuICogQ29weXJpZ2h0IDIwMTkgR29vZ2xlIExMQy4gQWxsIFJpZ2h0cyBSZXNlcnZlZC5cbiAqIExpY2Vuc2VkIHVuZGVyIHRoZSBBcGFjaGUgTGljZW5zZSwgVmVyc2lvbiAyLjAgKHRoZSBcIkxpY2Vuc2VcIik7XG4gKiB5b3UgbWF5IG5vdCB1c2UgdGhpcyBmaWxlIGV4Y2VwdCBpbiBjb21wbGlhbmNlIHdpdGggdGhlIExpY2Vuc2UuXG4gKiBZb3UgbWF5IG9idGFpbiBhIGNvcHkgb2YgdGhlIExpY2Vuc2UgYXRcbiAqXG4gKiBodHRwOi8vd3d3LmFwYWNoZS5vcmcvbGljZW5zZXMvTElDRU5TRS0yLjBcbiAqXG4gKiBVbmxlc3MgcmVxdWlyZWQgYnkgYXBwbGljYWJsZSBsYXcgb3IgYWdyZWVkIHRvIGluIHdyaXRpbmcsIHNvZnR3YXJlXG4gKiBkaXN0cmlidXRlZCB1bmRlciB0aGUgTGljZW5zZSBpcyBkaXN0cmlidXRlZCBvbiBhbiBcIkFTIElTXCIgQkFTSVMsXG4gKiBXSVRIT1VUIFdBUlJBTlRJRVMgT1IgQ09ORElUSU9OUyBPRiBBTlkgS0lORCwgZWl0aGVyIGV4cHJlc3Mgb3IgaW1wbGllZC5cbiAqIFNlZSB0aGUgTGljZW5zZSBmb3IgdGhlIHNwZWNpZmljIGxhbmd1YWdlIGdvdmVybmluZyBwZXJtaXNzaW9ucyBhbmRcbiAqIGxpbWl0YXRpb25zIHVuZGVyIHRoZSBMaWNlbnNlLlxuICogPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1cbiAqL1xuXG5pbXBvcnQge0ZsaXBMZWZ0UmlnaHQsIEZsaXBMZWZ0UmlnaHRJbnB1dHMsIEtlcm5lbENvbmZpZywgS2VybmVsRnVuYywgVGVuc29ySW5mb30gZnJvbSAnQHRlbnNvcmZsb3cvdGZqcy1jb3JlJztcblxuaW1wb3J0IHtCYWNrZW5kV2FzbX0gZnJvbSAnLi4vYmFja2VuZF93YXNtJztcblxubGV0IHdhc21GbGlwTGVmdFJpZ2h0OiAoXG4gICAgeElkOiBudW1iZXIsIGJhdGNoOiBudW1iZXIsIGltYWdlSGVpZ2h0OiBudW1iZXIsIGltYWdlV2lkdGg6IG51bWJlcixcbiAgICBudW1DaGFubmVsczogbnVtYmVyLCBvdXRJZDogbnVtYmVyKSA9PiB2b2lkO1xuXG5mdW5jdGlvbiBzZXR1cChiYWNrZW5kOiBCYWNrZW5kV2FzbSkge1xuICB3YXNtRmxpcExlZnRSaWdodCA9IGJhY2tlbmQud2FzbS5jd3JhcChGbGlwTGVmdFJpZ2h0LCBudWxsIC8qIHZvaWQgKi8sIFtcbiAgICAnbnVtYmVyJywgIC8vIHhJZFxuICAgICdudW1iZXInLCAgLy8gYmF0Y2hcbiAgICAnbnVtYmVyJywgIC8vIGltYWdlSGVpZ2h0XG4gICAgJ251bWJlcicsICAvLyBpbWFnZVdpZHRoXG4gICAgJ251bWJlcicsICAvLyBudW1DaGFubmVsc1xuICAgICdudW1iZXInLCAgLy8gb3V0SWRcbiAgXSk7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBmbGlwTGVmdFJpZ2h0KFxuICAgIGFyZ3M6IHtpbnB1dHM6IEZsaXBMZWZ0UmlnaHRJbnB1dHMsIGJhY2tlbmQ6IEJhY2tlbmRXYXNtfSk6IFRlbnNvckluZm8ge1xuICBjb25zdCB7aW5wdXRzLCBiYWNrZW5kfSA9IGFyZ3M7XG4gIGNvbnN0IHtpbWFnZX0gPSBpbnB1dHM7XG5cbiAgY29uc3Qgb3V0ID0gYmFja2VuZC5tYWtlT3V0cHV0KGltYWdlLnNoYXBlLCBpbWFnZS5kdHlwZSk7XG4gIGNvbnN0IGltYWdlSWQgPSBiYWNrZW5kLmRhdGFJZE1hcC5nZXQoaW1hZ2UuZGF0YUlkKS5pZDtcbiAgY29uc3Qgb3V0SWQgPSBiYWNrZW5kLmRhdGFJZE1hcC5nZXQob3V0LmRhdGFJZCkuaWQ7XG5cbiAgY29uc3QgW2JhdGNoLCBpbWFnZUhlaWdodCwgaW1hZ2VXaWR0aCwgbnVtQ2hhbm5lbHNdID0gaW1hZ2Uuc2hhcGU7XG5cbiAgd2FzbUZsaXBMZWZ0UmlnaHQoXG4gICAgICBpbWFnZUlkLCBiYXRjaCwgaW1hZ2VIZWlnaHQsIGltYWdlV2lkdGgsIG51bUNoYW5uZWxzLCBvdXRJZCk7XG4gIHJldHVybiBvdXQ7XG59XG5cbmV4cG9ydCBjb25zdCBmbGlwTGVmdFJpZ2h0Q29uZmlnOiBLZXJuZWxDb25maWcgPSB7XG4gIGtlcm5lbE5hbWU6IEZsaXBMZWZ0UmlnaHQsXG4gIGJhY2tlbmROYW1lOiAnd2FzbScsXG4gIGtlcm5lbEZ1bmM6IGZsaXBMZWZ0UmlnaHQgYXMge30gYXMgS2VybmVsRnVuYyxcbiAgc2V0dXBGdW5jOiBzZXR1cFxufTtcbiJdfQ==
