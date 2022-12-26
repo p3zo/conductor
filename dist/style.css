@@ -1,0 +1,8 @@
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+#info {
+    font-weight: bold;
+}
