@@ -7,16 +7,23 @@
 <script defer src="bundle.js"></script></head>
 <body>
 <div id="instructions">
-    <p>Control music like a conductor. Pinch to begin; make a fist to stop.</p>
-    <p>Song: <a href="https://www.youtube.com/watch?v=ALc84j-OW3c" target="_blank" rel="noopener">Concerto for Guitar -
-        Luis Bonfá</a>
-    </p>
+    <p>Control music like a conductor.</p>
+    <p>Show your hand to the camera to start. Make a fist to stop.</p>
+    <p>Move your hand to the corner regions to apply filters to the audio.</p>
 </div>
 <div id="info">
     Audio transport: <span id='transport'>0.00</span>
     <br/>
+    Lowpass filter: <span id='lowpass'>off</span>
+    <br/>
+    Highpass filter: <span id='highpass'>off</span>
+    <br/>
     <span id="error"></span>
 </div>
+<button id="launch">Launch</button>
 <div id="canvas"></div>
+<p>Song: <a href="https://www.youtube.com/watch?v=ALc84j-OW3c" target="_blank" rel="noopener">Concerto for Guitar -
+    Luis Bonfá</a>
+</p>
 </body>
 </html>
