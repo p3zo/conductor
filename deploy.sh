@@ -6,7 +6,7 @@ set -e
 : "${TARGET_BRANCH:=pages}"
 : "${ORIGIN:=origin}"
 
-# Disable this if you've already run 'yarn build'.
+# Disable this if you've already run the build script.
 : "${BUILD:=true}"
 
 # Explode and deploy the contents of this directory.
@@ -99,11 +99,7 @@ printf 'Please review the build output now---run:\n'
 printf '    cd "%s" && python -m SimpleHTTPServer\n' "$TMPDIR"
 msg="Do you want to deploy?"
 if [[ "$(prompt "$msg")" == "yes" ]]; then
-    if [[ -n "$DRY_RUN" ]]; then
-        printf '(DRY_RUN is set; skipping push to remote.)\n'
-    else
-        git push origin "$TARGET_BRANCH"
-    fi
+    git push origin "$TARGET_BRANCH"
 fi
 
 git clean -xfd -e node_modules

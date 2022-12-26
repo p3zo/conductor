@@ -48,7 +48,7 @@ function CreateLayerStack(video, width, height) {
     const stack = new LayerStack({
         width,
         height,
-        outline: '2px solid white'
+        outline: '1px solid white'
     });
 
     const videoLayer = new VideoLayer({
@@ -135,7 +135,8 @@ async function Run() {
     // (Setting the parameter to 1 disables the smoothing if you'd like to try without it.)
     const pos = new ExponentialCoordinateAverage(0.85);
 
-    const wasmConfig = {wasmPaths: './node_modules/@tensorflow/tfjs-backend-wasm/dist/'};
+    // Note: this path must match the path in webpack config
+    const wasmConfig = {wasmPaths: 'node_modules/@tensorflow/tfjs-backend-wasm/dist/'};
     const thresholds = yoha.RecommendedHandPoseProbabilityThresholds;
 
     // Run the engine

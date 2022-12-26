@@ -16,12 +16,11 @@ module.exports = (env) => {
             path: path.resolve(__dirname, 'dist'),
             clean: true,
             filename: 'bundle.js',
-            publicPath: '/',
         },
         devtool: 'inline-source-map',
         devServer: {
             headers: {
-                // These two headers are requried for cross origin isolation.
+                // These two headers are required for cross origin isolation.
                 'Cross-Origin-Opener-Policy': 'same-origin',
                 'Cross-Origin-Embedder-Policy': 'require-corp'
             },
