@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec "/Users/pato/.nvm/versions/node/v17.8.0/bin/node" "$@"
