@@ -14,8 +14,8 @@ import {
 import {ScaleResolutionToWidth} from './util/stream_helper';
 import {ExponentialCoordinateAverage, ComputeCursorPositionFromCoordinates} from './util/ema';
 
-const BORDER_PADDING_FACTOR = 0.05;
-const VIDEO_WIDTH_FACTOR = 0.66;
+const BORDER_PADDING_FACTOR = 0.01;
+const VIDEO_WIDTH_FACTOR = .9;
 
 const FILTER = new Tone.Filter(0, "highpass")
 
@@ -27,35 +27,37 @@ function mapRange(number, inMin, inMax, outMin, outMax) {
 }
 
 const controlFilter = (x, y) => {
-    if (y < 0) {
-        y = 0
-    }
     if (x < 0) {
         x = 0
     }
+    if (y < 0) {
+        y = 0
+    }
 
-    // top-left
-    if (x < HOTSPOT_WIDTH && y < HOTSPOT_HEIGHT) {
-        var freq = mapRange(x * y, 0, HOTSPOT_WIDTH * HOTSPOT_HEIGHT, 0, 2000)
+    const bottomLeft = x <= HOTSPOT_WIDTH && y >= 1 - HOTSPOT_HEIGHT
+    const topRight = x >= 1 - HOTSPOT_WIDTH && y <= HOTSPOT_HEIGHT
+    if (bottomLeft) {
+        const func = Math.abs((x - HOTSPOT_WIDTH) * (y - (1 - HOTSPOT_HEIGHT)))
+        var freq = mapRange(func, 0, .05, 2000, -2000)
         if (freq < 0) {
             freq = 0
         }
         FILTER.set({frequency: freq, type: 'lowpass'})
         document.getElementById('lowpass').textContent = freq.toFixed(2);
-    } else {
-        document.getElementById('lowpass').textContent = 'off'
-    }
-
-    // bottom-right
-    if (x > 1 - HOTSPOT_WIDTH && y > 1 - HOTSPOT_HEIGHT) {
-        var freq = mapRange(x * y, (1 - HOTSPOT_WIDTH) * (1 - HOTSPOT_HEIGHT), 1, 0, 2000)
+        document.getElementById('highpass').textContent = 'off'
+    } else if (topRight) {
+        const func = Math.abs((x - (1 - HOTSPOT_WIDTH)) * (y - HOTSPOT_HEIGHT))
+        var freq = mapRange(func, 0, .05, 0, 4000)
         if (freq < 0) {
             freq = 0
         }
         FILTER.set({frequency: freq, type: 'highpass'})
+        document.getElementById('lowpass').textContent = 'off'
         document.getElementById('highpass').textContent = freq.toFixed(2);
     } else {
+        FILTER.set({frequency: 0, type: 'highpass'})
         document.getElementById('highpass').textContent = 'off'
+        document.getElementById('lowpass').textContent = 'off'
     }
 }
 
@@ -119,23 +121,25 @@ function CreateLayerStack(video, width, height) {
             height,
             numSmoothPoints: 2,
             color: 'white',
-            lineWidth: .25,
+            lineWidth: 1,
         }
     });
-    axisLayer.AddNode(HOTSPOT_WIDTH, 0);
-    axisLayer.AddNode(HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
+    // bottom left
+    axisLayer.AddNode(HOTSPOT_WIDTH, 1);
+    axisLayer.AddNode(HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
     axisLayer.EndPath();
 
-    axisLayer.AddNode(0, HOTSPOT_HEIGHT);
-    axisLayer.AddNode(HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
+    axisLayer.AddNode(0, 1 - HOTSPOT_HEIGHT);
+    axisLayer.AddNode(HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
     axisLayer.EndPath();
 
-    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
-    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 1);
+    // top right
+    axisLayer.AddNode(1 - HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
+    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 0);
     axisLayer.EndPath();
 
-    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
-    axisLayer.AddNode(1, 1 - HOTSPOT_HEIGHT);
+    axisLayer.AddNode(1 - HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
+    axisLayer.AddNode(1, HOTSPOT_HEIGHT);
     axisLayer.EndPath();
 
     stack.AddLayer(axisLayer);
