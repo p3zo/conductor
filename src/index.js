@@ -136,7 +136,7 @@ async function Run() {
     const pos = new ExponentialCoordinateAverage(0.85);
 
     // Note: this path must match the path in webpack config
-    const wasmConfig = {wasmPaths: 'node_modules/@tensorflow/tfjs-backend-wasm/dist/'};
+    const wasmConfig = {wasmPaths: './node_modules/@tensorflow/tfjs-backend-wasm/dist/'};
     const thresholds = yoha.RecommendedHandPoseProbabilityThresholds;
 
     // Run the engine
