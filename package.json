@@ -1,7 +1,13 @@
 {
+    "private": true,
     "name": "conductor",
     "version": "0.0.1",
-    "private": true,
+    "license": "MIT",
+    "author": "Patricio Ovalle",
+    "repository": {
+        "url": "https://github.com/p3zo/conductor",
+        "type": "git"
+    },
     "scripts": {
         "build": "webpack",
         "start": "webpack serve"
