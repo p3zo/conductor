@@ -34,7 +34,9 @@ export class ExponentialCoordinateAverage {
     }
 }
 
-export function ComputeCursorPositionFromCoordinates(coords: number[][]) : number[] {
-  return [(coords[3][0] + coords[7][0]) / 2, (coords[3][1] + coords[7][1]) / 2];
+export function ComputeCursorPositionFromCoordinates(coords: number[][]): number[] {
+    // See coordinate mappings at https://github.com/handtracking-io/yoha/blob/main/docs/yoha.itrackresult.coordinates.md
+    // return [(coords[3][0] + coords[7][0]) / 2, (coords[3][1] + coords[7][1]) / 2]; // midpoint between tip of thumb and tip of index finger
+    return coords[7] // tip of the index finter
 }
 
