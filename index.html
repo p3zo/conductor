@@ -7,21 +7,19 @@
 <script defer src="bundle.js"></script></head>
 <body>
 <div id="instructions">
-    <p>Control music like a conductor.</p>
-    <p>Show your hand to the camera to start. Make a fist to stop.</p>
-    <p>Move your hand to the corner regions to apply filters to the audio.</p>
+    <p>Control music like a conductor!</p>
+    <p>Click the Launch button below and show your hand to the camera.</p>
+    <p>Make a pinch gesture to start audio playback. Make a fist to pause it.</p>
+    <p>Move your hand left and right to control the playback rate. Move up and down to control the volume.</p>
 </div>
 <div id="info">
-    Audio transport: <span id='transport'>0.00</span>
-    <br/>
-    Lowpass filter: <span id='lowpass'>off</span>
-    <br/>
-    Highpass filter: <span id='highpass'>off</span>
-    <br/>
-    <span id="error"></span>
+    <div class="data">Time<span id='transport'>0.00</span></div>
+    <div class="data">Volume<span id='volume'>5</span></div>
+    <div class="data">Playback rate<span id='playback-rate'>1.0</span></div>
 </div>
 <button id="launch">Launch</button>
 <div id="canvas"></div>
+<span id="error"></span>
 <p>Song: <a href="https://www.youtube.com/watch?v=ALc84j-OW3c" target="_blank" rel="noopener">Concerto for Guitar -
     Luis Bonfá</a>
 </p>
