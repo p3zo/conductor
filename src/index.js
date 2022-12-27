@@ -5,7 +5,6 @@ import * as yoha from '@handtracking.io/yoha';
 
 import {
     VideoLayer,
-    DynamicPathLayer,
     PointLayer,
     LayerStack,
     LandmarkLayer,
@@ -17,48 +16,29 @@ import {ExponentialCoordinateAverage, ComputeCursorPositionFromCoordinates} from
 const BORDER_PADDING_FACTOR = 0.01;
 const VIDEO_WIDTH_FACTOR = .9;
 
-const FILTER = new Tone.Filter(0, "highpass")
+var PLAYER = null
 
-const HOTSPOT_HEIGHT = .33
-const HOTSPOT_WIDTH = .25
-
-function mapRange(number, inMin, inMax, outMin, outMax) {
-    return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+const roundUpToNearestTenth = num => {
+    return Math.max(Math.round(num * 10) / 10)
 }
 
-const controlFilter = (x, y) => {
-    if (x < 0) {
-        x = 0
+const controlTempo = (x) => {
+    const n = roundUpToNearestTenth(x)
+    const playbackRate = .5 + n
+    if (PLAYER) {
+        PLAYER.playbackRate = playbackRate
     }
-    if (y < 0) {
-        y = 0
-    }
+    document.getElementById('playback-rate').textContent = playbackRate.toFixed(1);
+}
 
-    const bottomLeft = x <= HOTSPOT_WIDTH && y >= 1 - HOTSPOT_HEIGHT
-    const topRight = x >= 1 - HOTSPOT_WIDTH && y <= HOTSPOT_HEIGHT
-    if (bottomLeft) {
-        const func = Math.abs((x - HOTSPOT_WIDTH) * (y - (1 - HOTSPOT_HEIGHT)))
-        var freq = mapRange(func, 0, .05, 2000, -2000)
-        if (freq < 0) {
-            freq = 0
-        }
-        FILTER.set({frequency: freq, type: 'lowpass'})
-        document.getElementById('lowpass').textContent = freq.toFixed(2);
-        document.getElementById('highpass').textContent = 'off'
-    } else if (topRight) {
-        const func = Math.abs((x - (1 - HOTSPOT_WIDTH)) * (y - HOTSPOT_HEIGHT))
-        var freq = mapRange(func, 0, .05, 0, 4000)
-        if (freq < 0) {
-            freq = 0
-        }
-        FILTER.set({frequency: freq, type: 'highpass'})
-        document.getElementById('lowpass').textContent = 'off'
-        document.getElementById('highpass').textContent = freq.toFixed(2);
-    } else {
-        FILTER.set({frequency: 0, type: 'highpass'})
-        document.getElementById('highpass').textContent = 'off'
-        document.getElementById('lowpass').textContent = 'off'
+const controlVolume = y => {
+    const n = roundUpToNearestTenth(1 - y)
+    const volume = 20 * n - 10
+    if (PLAYER) {
+        PLAYER.set({volume})
     }
+    const displayVolume = (volume + 10) / 2
+    document.getElementById('volume').textContent = displayVolume.toFixed(0);
 }
 
 const pauseTransport = function () {
@@ -115,36 +95,7 @@ function CreateLayerStack(video, width, height) {
     });
     stack.AddLayer(fpsLayer);
 
-    const axisLayer = new DynamicPathLayer({
-        pathLayerConfig: {
-            width,
-            height,
-            numSmoothPoints: 2,
-            color: 'white',
-            lineWidth: 1,
-        }
-    });
-    // bottom left
-    axisLayer.AddNode(HOTSPOT_WIDTH, 1);
-    axisLayer.AddNode(HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
-    axisLayer.EndPath();
-
-    axisLayer.AddNode(0, 1 - HOTSPOT_HEIGHT);
-    axisLayer.AddNode(HOTSPOT_WIDTH, 1 - HOTSPOT_HEIGHT);
-    axisLayer.EndPath();
-
-    // top right
-    axisLayer.AddNode(1 - HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
-    axisLayer.AddNode(1 - HOTSPOT_WIDTH, 0);
-    axisLayer.EndPath();
-
-    axisLayer.AddNode(1 - HOTSPOT_WIDTH, HOTSPOT_HEIGHT);
-    axisLayer.AddNode(1, HOTSPOT_HEIGHT);
-    axisLayer.EndPath();
-
-    stack.AddLayer(axisLayer);
-
-    return {stack, videoLayer, pointLayer, axisLayer, landmarkLayer, fpsLayer};
+    return {stack, videoLayer, pointLayer, landmarkLayer, fpsLayer};
 }
 
 async function Run() {
@@ -189,7 +140,7 @@ async function Run() {
     ({width, height} = ScaleResolutionToWidth({width, height}, targetWidth));
 
     // Create visualization layers
-    const {stack, pointLayer, axisLayer, landmarkLayer, fpsLayer} =
+    const {stack, pointLayer, landmarkLayer, fpsLayer} =
         CreateLayerStack(src, width, height);
     document.getElementById('canvas').appendChild(stack.GetEl());
 
@@ -212,14 +163,13 @@ async function Run() {
     yoha.StartTfjsWasmEngine(config, wasmConfig, src, modelFiles, res => {
         fpsLayer.RegisterCall();
 
-        axisLayer.Render();
-
         document.getElementById('transport').textContent = Tone.Transport.seconds.toFixed(2);
 
         if (res.isHandPresentProb > thresholds.IS_HAND_PRESENT) {
             const [cursorX, cursorY] = pos.Add(ComputeCursorPositionFromCoordinates(res.coordinates));
 
-            controlFilter(cursorX, cursorY)
+            controlTempo(cursorX)
+            controlVolume(cursorY)
 
             pointLayer.DrawPoint(cursorX, cursorY);
             pointLayer.Render();
@@ -256,17 +206,16 @@ el.addEventListener(clickEvent, () => {
     console.log('Launched')
     el.parentElement.removeChild(el);
 
-    const PLAYER = new Tone.Player({
+    PLAYER = new Tone.GrainPlayer({
         "url": "concerto-for-guitar.m4a",
         "loop": true,
         "volume": 5,
         "onload": () => {
             console.log('Loaded audio')
             Tone.start();
-            PLAYER.sync().connect(FILTER).start();
-            FILTER.toDestination()
+            PLAYER.sync().start();
         }
-    })
+    }).toDestination();
 
     Run();
 })

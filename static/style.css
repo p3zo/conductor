@@ -1,8 +1,18 @@
 body {
     margin: 2rem;
-    overflow: hidden;
+    background-color: rgba(105, 65, 3, 0.47);
 }
 
 #info {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 3em;
     font-weight: bold;
+}
+
+.data {
+    display:flex;
+    flex-direction: column;
+    text-align:center;
 }
