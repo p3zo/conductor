@@ -1,6 +1,6 @@
 /* Adapted from the Yoha draw demo: https://github.com/handtracking-io/yoha/tree/main/src/demos/draw */
 
-import * as Tone from 'tone';
+import {Howl, Howler} from 'howler';
 import * as yoha from '@handtracking.io/yoha';
 
 import {
@@ -16,7 +16,15 @@ import {ExponentialCoordinateAverage, ComputeCursorPositionFromCoordinates} from
 const BORDER_PADDING_FACTOR = 0.01;
 const VIDEO_WIDTH_FACTOR = .9;
 
-var PLAYER = null
+const sound = new Howl({
+    src: ['concerto-for-guitar.m4a'],
+    volume: 0.5,
+    html5: true,
+    loop: true,
+    onload: () => {
+        console.log('Loaded audio')
+    }
+})
 
 const roundUpToNearestTenth = num => {
     return Math.max(Math.round(num * 10) / 10)
@@ -25,31 +33,33 @@ const roundUpToNearestTenth = num => {
 const controlTempo = (x) => {
     const n = roundUpToNearestTenth(x)
     const playbackRate = .5 + n
-    if (PLAYER) {
-        PLAYER.playbackRate = playbackRate
+    if (playbackRate !== sound.rate()) {
+        sound.rate(playbackRate)
     }
+
     document.getElementById('playback-rate').textContent = playbackRate.toFixed(1);
 }
 
 const controlVolume = y => {
-    const n = roundUpToNearestTenth(1 - y)
-    const volume = 20 * n - 10
-    if (PLAYER) {
-        PLAYER.set({volume})
+    const volume = roundUpToNearestTenth(1 - y)
+    if (volume !== sound.volume()) {
+        sound.volume(volume)
     }
-    const displayVolume = (volume + 10) / 2
+    const displayVolume = volume * 10
     document.getElementById('volume').textContent = displayVolume.toFixed(0);
 }
 
-const pauseTransport = function () {
-    if (Tone.Transport.state == 'started') {
-        Tone.Transport.pause();
+const pause = function () {
+    if (sound.playing()) {
+        console.log('pause')
+        sound.pause()
     }
 }
 
-const playTransport = function () {
-    if (Tone.Transport.state !== 'started') {
-        Tone.Transport.start();
+const play = function () {
+    if (!sound.playing()) {
+        console.log('play')
+        sound.play();
     }
 }
 
@@ -163,7 +173,7 @@ async function Run() {
     yoha.StartTfjsWasmEngine(config, wasmConfig, src, modelFiles, res => {
         fpsLayer.RegisterCall();
 
-        document.getElementById('transport').textContent = Tone.Transport.seconds.toFixed(2);
+        document.getElementById('transport').textContent = sound.seek().toFixed(2)
 
         if (res.isHandPresentProb > thresholds.IS_HAND_PRESENT) {
             const [cursorX, cursorY] = pos.Add(ComputeCursorPositionFromCoordinates(res.coordinates));
@@ -176,13 +186,13 @@ async function Run() {
 
             if (res.poses.pinchProb > thresholds.PINCH) {
                 pointLayer.setColor('green')
-                playTransport()
+                play()
             } else {
                 pointLayer.setColor('blue')
             }
 
             if (res.poses.fistProb > thresholds.FIST) {
-                pauseTransport()
+                pause()
                 pointLayer.setColor('red')
             }
 
@@ -203,19 +213,6 @@ var clickEvent = ('ontouchstart' in document.documentElement) ? 'touchend' : 'cl
 
 const el = document.getElementById("launch")
 el.addEventListener(clickEvent, () => {
-    console.log('Launched')
     el.parentElement.removeChild(el);
-
-    PLAYER = new Tone.GrainPlayer({
-        "url": "concerto-for-guitar.m4a",
-        "loop": true,
-        "volume": 5,
-        "onload": () => {
-            console.log('Loaded audio')
-            Tone.start();
-            PLAYER.sync().start();
-        }
-    }).toDestination();
-
     Run();
 })
