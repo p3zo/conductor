@@ -9,8 +9,8 @@
         "type": "git"
     },
     "scripts": {
-        "build": "webpack",
-        "start": "webpack serve"
+        "build": "webpack --mode production",
+        "start": "webpack serve --mode development"
     },
     "devDependencies": {
         "@types/emscripten": "^1.39.6",
