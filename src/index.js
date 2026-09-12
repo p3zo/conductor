@@ -26,12 +26,16 @@ const sound = new Howl({
     }
 })
 
-const roundUpToNearestTenth = num => {
-    return Math.max(Math.round(num * 10) / 10)
+// Yoha rescales the landmarks so the padded track area spans [0, 1] but doesn't clamp them,
+// so a fingertip predicted past that area arrives out of range. Howler treats an out of range
+// volume as a read rather than a write, which silently leaves the audio where it was while the
+// readout goes on displaying the value we asked for.
+const clampAndRoundToTenth = num => {
+    return Math.round(Math.min(Math.max(num, 0), 1) * 10) / 10
 }
 
 const controlTempo = (x) => {
-    const n = roundUpToNearestTenth(x)
+    const n = clampAndRoundToTenth(x)
     const playbackRate = .5 + n
     if (playbackRate !== sound.rate()) {
         sound.rate(playbackRate)
@@ -41,7 +45,7 @@ const controlTempo = (x) => {
 }
 
 const controlVolume = y => {
-    const volume = roundUpToNearestTenth(1 - y)
+    const volume = clampAndRoundToTenth(1 - y)
     if (volume !== sound.volume()) {
         sound.volume(volume)
     }
@@ -170,7 +174,9 @@ async function Run() {
         padding: BORDER_PADDING_FACTOR,
     };
 
-    yoha.StartTfjsWasmEngine(config, wasmConfig, src, modelFiles, res => {
+    // Returned rather than awaited: the engine's promise settles only once the analysis loop
+    // stops, so awaiting it here would never return, but a failure to start still rejects it.
+    return yoha.StartTfjsWasmEngine(config, wasmConfig, src, modelFiles, res => {
         fpsLayer.RegisterCall();
 
         document.getElementById('transport').textContent = sound.seek().toFixed(2)
@@ -211,8 +217,13 @@ async function Run() {
 
 var clickEvent = ('ontouchstart' in document.documentElement) ? 'touchend' : 'click';
 
-const el = document.getElementById("launch")
-el.addEventListener(clickEvent, () => {
-    el.parentElement.removeChild(el);
-    Run();
+const launch = document.getElementById("launch")
+launch.addEventListener(clickEvent, () => {
+    launch.hidden = true;
+    // Only the camera checks report their own failures, so without this a model or wasm
+    // download that fails leaves an empty page with nothing to click.
+    Run().catch(error => {
+        LogError(`Something went wrong while starting up (${error}). You may try again.`);
+        launch.hidden = false;
+    });
 })
