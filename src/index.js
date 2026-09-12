@@ -21,9 +21,6 @@ const sound = new Howl({
     volume: 0.5,
     html5: true,
     loop: true,
-    onload: () => {
-        console.log('Loaded audio')
-    }
 })
 
 // Yoha rescales the landmarks so the padded track area spans [0, 1] but doesn't clamp them,
@@ -55,14 +52,12 @@ const controlVolume = y => {
 
 const pause = function () {
     if (sound.playing()) {
-        console.log('pause')
         sound.pause()
     }
 }
 
 const play = function () {
     if (!sound.playing()) {
-        console.log('play')
         sound.play();
     }
 }
