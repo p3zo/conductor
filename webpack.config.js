@@ -4,11 +4,13 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
-const PRODUCTION = !!process.env.PRODUCTION;
+module.exports = (env, argv) => {
+    // The mode comes from the --mode flag in the package.json scripts, so the
+    // deployed build can't silently fall back to an unminified development one.
+    const production = argv.mode === 'production';
 
-module.exports = (env) => {
     const config = {
-        mode: PRODUCTION ? 'production' : 'development',
+        mode: production ? 'production' : 'development',
         entry: {
             main: './src/index.js',
         },
@@ -17,7 +19,8 @@ module.exports = (env) => {
             clean: true,
             filename: 'bundle.js',
         },
-        devtool: 'inline-source-map',
+        // An inline source map is 16 MB of base64 in the bundle; keep it out of the deployed build.
+        devtool: production ? false : 'inline-source-map',
         devServer: {
             headers: {
                 // These two headers are required for cross origin isolation.
@@ -38,15 +41,6 @@ module.exports = (env) => {
         module: {
             rules: [
                 {
-                    test: /\.wasm$/i,
-                    type: 'javascript/auto',
-                    use: [
-                        {
-                            loader: 'file-loader',
-                        },
-                    ],
-                },
-                {
                     test: /\.tsx?$/,
                     use: 'ts-loader',
                     exclude: /node_modules/,
@@ -60,7 +54,7 @@ module.exports = (env) => {
             }),
             new CopyWebpackPlugin({
                 patterns: [
-                    'node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm',
+                    {from: 'node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm', to: 'wasm/[name][ext]'},
                     {from: 'node_modules/@handtracking.io/yoha/models/', to: './'},
                     {from: 'static', to: './'},
                 ]

@@ -26,8 +26,8 @@ Adapted from the Yoha draw demo.
 ## Implementation notes
 
 **Smoothing.** Tracking a hand at video rate is noisy, so the cursor follows an exponential moving average of the
-tracked position (`ExponentialCoordinateAverage(0.85)`), weighted towards where the hand already was. Reading the raw
-position each frame makes the tempo shudder even while a hand is held still.
+tracked position (`ExponentialCoordinateAverage(0.85)`), which mixes 15% of where the hand already was into each new
+reading. Reading the raw position each frame makes the tempo shudder even while a hand is held still.
 
 **Quantization.** Rate and volume are rounded to a tenth, and applied only when the rounded value changes. Writing a
 slightly different playback rate on every frame is audible as a warble.
