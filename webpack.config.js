@@ -41,15 +41,6 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /\.wasm$/i,
-                    type: 'javascript/auto',
-                    use: [
-                        {
-                            loader: 'file-loader',
-                        },
-                    ],
-                },
-                {
                     test: /\.tsx?$/,
                     use: 'ts-loader',
                     exclude: /node_modules/,
@@ -63,7 +54,7 @@ module.exports = (env, argv) => {
             }),
             new CopyWebpackPlugin({
                 patterns: [
-                    'node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm',
+                    {from: 'node_modules/@tensorflow/tfjs-backend-wasm/dist/*.wasm', to: 'wasm/[name][ext]'},
                     {from: 'node_modules/@handtracking.io/yoha/models/', to: './'},
                     {from: 'static', to: './'},
                 ]
